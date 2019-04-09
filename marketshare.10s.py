@@ -9,7 +9,7 @@ from pathlib import Path
 
 STOCKS = ["Stock-US-SPOT", "Stock-US-TSLA", "Stock-US-NFLX", "Stock-US-ASML", "Index-US-DJIA","Future-US-GOLD"]
 
-FONT_SIZE = 13
+FONT_SIZE = 12
 
 home = str(Path.home())
 save_file = "{:s}/.stocksave".format(home)
@@ -41,11 +41,11 @@ for i in data.get("InstrumentResponses"):
     stype = matches.get("Instrument").get("Types")[0].get("Name")
 
     if change_value > 0:
-        symbol = "▲" 
-        color = "green"
+        symbol = "▲"
+        color = "#136417"
     else:
         symbol = "▼"
-        color = "red"
+        color = "#901D1D"
 
     line = "{}{} {:.2f} {} {:.2f} {:.2f}% | color={} size={}".format(prefix, ticker, last_price, symbol, change_value, pct, color, FONT_SIZE)
     if i.get("RequestId") == STOCKS[0]:
