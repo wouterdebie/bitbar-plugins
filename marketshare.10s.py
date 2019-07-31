@@ -3,11 +3,14 @@ import requests
 import datetime
 import time
 import os
+import os.path
+import time
 import json
 import sys
 from pathlib import Path
 
-STOCKS = ["Stock-US-SPOT", "Stock-US-TSLA", "Stock-US-NFLX", "Stock-US-ASML", "Index-US-DJIA","Future-US-GOLD"]
+STOCKS = ["Stock-US-SPOT", "Stock-US-TSLA", "Stock-US-NFLX",
+          "Stock-US-ASML", "Index-US-DJIA", "Future-US-GOLD"]
 
 FONT_SIZE = 12
 
@@ -17,7 +20,7 @@ save_file = "{:s}/.stocksave".format(home)
 day = datetime.datetime.today().weekday()
 now_time = int(datetime.datetime.now().time().strftime("%H%M"))
 
-if os.path.exists(save_file) and (day >= 5 or now_time <= 929 or now_time >= 1630):
+if os.path.exists(save_file) and (day >= 5 or now_time <= 929 or now_time >= 1630) and not time.time() - os.path.getmtime(save_file) > 12 * 3600:
     with open(save_file, "r") as f:
         data = json.load(f)
         prefix = "☾ "
@@ -47,11 +50,11 @@ for i in data.get("InstrumentResponses"):
         symbol = "▼"
         color = "#901D1D"
 
-    line = "{}{} {:.2f} {} {:.2f} {:.2f}% | color={} size={}".format(prefix, ticker, last_price, symbol, change_value, pct, color, FONT_SIZE)
+    line = "{}{} {:.2f} {} {:.2f} {:.2f}% | color={} size={}".format(
+        prefix, ticker, last_price, symbol, change_value, pct, color, FONT_SIZE)
     if i.get("RequestId") == STOCKS[0]:
         print(line)
         print("---")
 
     href = "https://www.marketwatch.com/investing/{}/{}".format(stype, ticker)
     print("{} href={}".format(line, href))
-
