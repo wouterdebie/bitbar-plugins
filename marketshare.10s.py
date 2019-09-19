@@ -9,7 +9,7 @@ import json
 import sys
 from pathlib import Path
 
-STOCKS = ["Stock-US-SPOT", "Stock-US-TSLA", "Stock-US-NFLX",
+STOCKS = ["Stock-US-SPOT", "Stock-US-DDOG", "Stock-US-TSLA", "Stock-US-NFLX",
           "Stock-US-ASML", "Index-US-DJIA", "Future-US-GOLD"]
 
 FONT_SIZE = 12
