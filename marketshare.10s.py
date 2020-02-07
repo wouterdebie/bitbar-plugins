@@ -1,4 +1,4 @@
-#!/usr/bin/env PYTHONIOENCODING=UTF-8 /usr/local/bin/python3
+#!/usr/bin/env PYTHONIOENCODING=UTF-8 python3
 import requests
 import datetime
 import time
@@ -10,7 +10,8 @@ import sys
 from pathlib import Path
 
 STOCKS = ["Stock-US-SPOT", "Stock-US-DDOG", "Stock-US-TSLA", "Stock-US-NFLX",
-          "Stock-US-ASML", "Index-US-DJIA", "Future-US-GOLD"]
+          "Stock-US-AMZN", "Stock-US-GOOG", "Stock-US-FB", "Stock-US-NEWR",
+          "Stock-US-WBA", "Index-US-DJIA", "Future-US-GOLD"]
 
 FONT_SIZE = 12
 
@@ -20,7 +21,7 @@ save_file = "{:s}/.stocksave".format(home)
 day = datetime.datetime.today().weekday()
 now_time = int(datetime.datetime.now().time().strftime("%H%M"))
 
-if os.path.exists(save_file) and (day >= 5 or now_time <= 929 or now_time >= 1630) and not time.time() - os.path.getmtime(save_file) > 12 * 3600:
+if os.path.exists(save_file) and (day >= 5 or now_time <= 829 or now_time >= 1530) and not time.time() - os.path.getmtime(save_file) > 12 * 3600:
     with open(save_file, "r") as f:
         data = json.load(f)
         prefix = "☾ "
