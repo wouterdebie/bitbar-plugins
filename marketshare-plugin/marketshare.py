@@ -1,4 +1,4 @@
-#!/usr/bin/env PYTHONIOENCODING=UTF-8 python3
+#!./venv/bin/python 
 import requests
 import datetime
 import time
@@ -9,7 +9,7 @@ import json
 import sys
 from pathlib import Path
 
-STOCKS = ["Stock-US-SPOT", "Stock-US-DDOG", "Stock-US-TSLA", "Stock-US-NFLX",
+STOCKS = ["Stock-US-DDOG", "Stock-US-SPOT", "Stock-US-BMRA", "Stock-US-TSLA", "Stock-US-NFLX",
           "Stock-US-AMZN", "Stock-US-GOOG", "Stock-US-FB", "Stock-US-NEWR",
           "Stock-US-WBA", "Index-US-DJIA", "Future-US-GOLD"]
 
