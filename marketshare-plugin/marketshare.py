@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 STOCKS = ["Stock-US-DDOG", "Stock-US-SPOT", "Stock-US-BMRA", "Stock-US-TSLA", "Stock-US-NFLX",
-          "Stock-US-AMZN", "Stock-US-GOOG", "Stock-US-FB", "Stock-US-NEWR",
+          "Stock-US-AMZN", "Stock-US-GOOG", "Stock-US-FB", "Stock-US-SNOW",
           "Stock-US-WBA", "Index-US-DJIA", "Future-US-GOLD"]
 
 FONT_SIZE = 12
