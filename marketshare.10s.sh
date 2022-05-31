@@ -28,8 +28,9 @@ if ! test -d venv; then
     export PATH=/usr/local/bin:$PATH
     python3 -m venv venv
     . venv/bin/activate
-	  pip install requests &> /dev/null
+    pip install requests pytz &> /dev/null
 fi
 . venv/bin/activate
 export LANG="${LANG:-en_US.UTF-8}"  # needed when printing utf-8 chars
 exec ./marketshare.py
+
