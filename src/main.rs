@@ -52,14 +52,20 @@ fn main() -> Result<(), Error> {
         (TOP_GREEN, TOP_RED)
     };
 
-    let (data, prefix): (serde_json::Value, &str) = match (trading, File::open(save_file_path)) {
+    let data: serde_json::Value = match (trading, File::open(&save_file_path)) {
         (true, Ok(file)) => {
             // Read file as json
-            (serde_json::from_reader(file)?, "☾")
+            serde_json::from_reader(file)?
         }
         (true, Err(_)) | (false, _) => {
+            // Get data from API
             let url = format!("{}{}", API_URL, STOCKS.join(","));
-            (reqwest::blocking::get(url)?.json()?, "")
+            let data = reqwest::blocking::get(url)?.json()?;
+
+            // Save data as json
+            std::fs::write(&save_file_path, serde_json::to_string(&data).unwrap()).unwrap();
+
+            data
         }
     };
 
@@ -104,11 +110,11 @@ fn main() -> Result<(), Error> {
             ("▼", RED, top_red)
         };
 
-        let mut row = row![
-            prefix,
-            ticker,
-            r->last_price,
-            symbol,];
+        let mut row = if trading { row!["☾"] } else { row![] };
+
+        row.add_cell(cell!(ticker));
+        row.add_cell(cell!(r->format!("{:.2}", last_price)));
+        row.add_cell(cell!(symbol));
 
         if change_value >= 0.0 {
             row.add_cell(cell!(r->format!("+{:.2}", change_value)));
@@ -121,10 +127,6 @@ fn main() -> Result<(), Error> {
         row.add_cell(cell!(format!("({:.2} - {:.2})", low, high)));
         row.add_cell(cell!("|"));
         row.add_cell(cell!(format!("size={}", FONT_SIZE)));
-
-        if prefix.is_empty() {
-            row.remove_cell(0);
-        }
 
         if i == 0 {
             row.add_cell(cell!(format!("color={}", top_color)));
