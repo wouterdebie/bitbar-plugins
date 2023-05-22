@@ -40,9 +40,9 @@ fn main() -> Result<(), Error> {
     let current_weekday = now.weekday().num_days_from_monday();
     let current_time = now.time();
 
-    let trading = current_weekday >= 5
-        || current_time <= NaiveTime::from_hms_opt(9, 29, 0).unwrap()
-        || current_time >= NaiveTime::from_hms_opt(16, 5, 0).unwrap();
+    let trading = current_weekday <= 5
+        && current_time >= NaiveTime::from_hms_opt(9, 29, 0).unwrap()
+        && current_time <= NaiveTime::from_hms_opt(16, 5, 0).unwrap();
 
     let (top_green, top_red) = if current_time >= NaiveTime::from_hms_opt(6, 0, 0).unwrap()
         && current_time < NaiveTime::from_hms_opt(8, 00, 0).unwrap()
@@ -53,11 +53,11 @@ fn main() -> Result<(), Error> {
     };
 
     let data: serde_json::Value = match (trading, File::open(&save_file_path)) {
-        (true, Ok(file)) => {
+        (false, Ok(file)) => {
             // Read file as json
             serde_json::from_reader(file)?
         }
-        (true, Err(_)) | (false, _) => {
+        (false, Err(_)) | (true, _) => {
             // Get data from API
             let url = format!("{}{}", API_URL, STOCKS.join(","));
             let data = reqwest::blocking::get(url)?.json()?;
@@ -110,7 +110,7 @@ fn main() -> Result<(), Error> {
             ("▼", RED, top_red)
         };
 
-        let mut row = if trading { row!["☾"] } else { row![] };
+        let mut row = if trading { row![] } else { row!["☾"] };
 
         row.add_cell(cell!(ticker));
         row.add_cell(cell!(r->format!("{:.2}", last_price)));
