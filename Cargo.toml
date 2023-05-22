@@ -7,7 +7,10 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.71"
-chrono = "0.4.24"
+# chrono < 0.5 brings in a deprecated version of the `time` crate via `oldtime` feature by default
+# this makes it explicitly not do this as there is an advisory warning against this:
+# See: https://github.com/chronotope/chrono/issues/602
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 chrono-tz = "0.8.2"
 home = "0.5.4"
 prettytable-rs = "^0.10"
