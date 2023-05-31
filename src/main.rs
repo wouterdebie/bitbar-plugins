@@ -7,9 +7,8 @@ use prettytable::cell;
 use prettytable::format;
 use prettytable::row;
 use prettytable::Table;
-use std::fs::File;
 
-const API_URL: &str = "https://api.wsj.net/api/dylan/quotes/v2/comp/quoteByDialect?dialect=official&needed=CompositeTrading&MaxInstrumentMatches=1&accept=application/json&EntitlementToken=cecc4267a0194af89ca343805a3e57af&ckey=cecc4267a0&dialects=Charting&id=";
+const API_URL: &str = "https://api.wsj.net/api/dylan/quotes/v2/comp/quoteByDialect?dialect=official&needed=CompositeTrading|TimeZoneInfo&MaxInstrumentMatches=1&accept=application/json&EntitlementToken=cecc4267a0194af89ca343805a3e57af&ckey=cecc4267a0&dialects=Charting&id=";
 
 const STOCKS: [&str; 13] = [
     "Stock-US-DDOG",
@@ -34,15 +33,8 @@ const TOP_GREEN: &str = "#2CE035";
 const TOP_RED: &str = "#FF6565";
 
 fn main() -> Result<(), Error> {
-    let save_file_path = home::home_dir().unwrap().as_path().join(".stocksave");
-
     let now = Utc::now().with_timezone(&Eastern);
-    let current_weekday = now.weekday().num_days_from_monday();
     let current_time = now.time();
-
-    let trading = current_weekday <= 5
-        && current_time >= NaiveTime::from_hms_opt(9, 29, 0).unwrap()
-        && current_time <= NaiveTime::from_hms_opt(16, 5, 0).unwrap();
 
     let (top_green, top_red) = if current_time >= NaiveTime::from_hms_opt(6, 0, 0).unwrap()
         && current_time < NaiveTime::from_hms_opt(8, 00, 0).unwrap()
@@ -52,22 +44,8 @@ fn main() -> Result<(), Error> {
         (TOP_GREEN, TOP_RED)
     };
 
-    let data: serde_json::Value = match (trading, File::open(&save_file_path)) {
-        (false, Ok(file)) => {
-            // Read file as json
-            serde_json::from_reader(file)?
-        }
-        (false, Err(_)) | (true, _) => {
-            // Get data from API
-            let url = format!("{}{}", API_URL, STOCKS.join(","));
-            let data = reqwest::blocking::get(url)?.json()?;
-
-            // Save data as json
-            std::fs::write(&save_file_path, serde_json::to_string(&data).unwrap()).unwrap();
-
-            data
-        }
-    };
+    let url = format!("{}{}", API_URL, STOCKS.join(","));
+    let data: serde_json::Value = reqwest::blocking::get(url)?.json()?;
 
     let mut table = Table::new();
     let format = format::FormatBuilder::new().padding(0, 1).build();
@@ -79,30 +57,21 @@ fn main() -> Result<(), Error> {
         .iter()
         .enumerate()
     {
-        let matches = &stock["Matches"].as_array().unwrap()[0];
-        let ct = matches["CompositeTrading"].as_object().unwrap();
-        let ticker = matches["Instrument"].as_object().unwrap()["Ticker"]
-            .as_str()
-            .unwrap();
-
-        let last_price = ct["Last"].as_object().unwrap()["Price"]
-            .as_object()
-            .unwrap()["Value"]
-            .as_f64()
-            .unwrap();
-        let high = ct["High"].as_object().unwrap()["Value"].as_f64().unwrap();
-        let low = ct["Low"].as_object().unwrap()["Value"].as_f64().unwrap();
-
-        let change_value = ct["NetChange"].as_object().unwrap()["Value"]
-            .as_f64()
-            .unwrap();
-
+        let matches = &stock["Matches"][0];
+        let ct = &matches["CompositeTrading"];
+        let ticker = matches["Instrument"]["Ticker"].as_str().unwrap();
+        let last_price = &ct["Last"].as_object().unwrap()["Price"]["Value"];
+        let high = &ct["High"]["Value"];
+        let low = &ct["Low"]["Value"];
+        let change_value = ct["NetChange"]["Value"].as_f64().unwrap();
         let pct = ct["ChangePercent"].as_f64().unwrap();
-        let stype = matches["Instrument"].as_object().unwrap()["Types"]
-            .as_array()
-            .unwrap()[0]["Name"]
+        let stype = matches["Instrument"].as_object().unwrap()["Types"][0]["Name"]
             .as_str()
             .unwrap();
+        let last_trade = &ct["Last"]["Time"].as_str().unwrap();
+        let tzi = &matches["TimeZoneInfo"];
+        let offset_hours = tzi["UtcOffsetHours"].as_i64().unwrap();
+        let offset_minutes = tzi["UtcOffsetMinutes"].as_i64().unwrap();
 
         let (symbol, color, top_color) = if change_value > 0.0 {
             ("▲", GREEN, top_green)
@@ -110,7 +79,14 @@ fn main() -> Result<(), Error> {
             ("▼", RED, top_red)
         };
 
-        let mut row = if trading { row![] } else { row!["☾"] };
+        let last_trade_with_offset =
+            format!("{}{:+03}:{:02}", last_trade, offset_hours, offset_minutes);
+        let naive_dt = DateTime::parse_from_rfc3339(&last_trade_with_offset).unwrap();
+        let utc_dt = naive_dt.with_timezone(&Utc);
+
+        // Check if the last trade was within the last minute
+        let trading = Utc::now() - utc_dt < chrono::Duration::minutes(1);
+        let mut row = if trading { row![" "] } else { row!["☾"] };
 
         row.add_cell(cell!(ticker));
         row.add_cell(cell!(r->format!("{:.2}", last_price)));
