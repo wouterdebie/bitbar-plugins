@@ -4,7 +4,7 @@ EXECUTABLE=${SCRIPTDIR}/target/release/marketshare
 
 if [ ! -f "$EXECUTABLE" ]; then
 	pushd ${SCRIPTDIR}
-	cargo build --release
+	~/.cargo/bin/cargo build --release
 	popd
 fi
 
